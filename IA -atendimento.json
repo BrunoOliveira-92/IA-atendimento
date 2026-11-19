@@ -86,7 +86,7 @@
     {
       "parameters": {
         "toolDescription": "Use esta ferramenta para consultar todos os produtos, preços, especificações e quantidades disponíveis no estoque da loja.",
-        "url": "https://docs.google.com/spreadsheets/d/1hpBd17lnJtdKVx8I4BksbdsdTZvjItt25DdcqSfc-cA/export?format=csv",
+        "url": "SUA_URL_GOOGLE_SHEETS_AQUI",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequestTool",
@@ -137,7 +137,7 @@
           "parameters": [
             {
               "name": "X-Api-Key",
-              "value": "123456"
+              "value": "SUA_API_KEY_AQUI"
             }
           ]
         },
