@@ -45,4 +45,4 @@ Define a persona, o tom de voz e as restrições operacionais do agente:
 ### Prompt do Usuário (User Message / Expressão Dinâmica)
 Captura dinamicamente o texto ou legenda de mídia enviada pelo cliente no WhatsApp:
 ```javascript
-{{ $('Webhook1').item.json.body.payload.body || $('Webhook1').item.json.body.payload.caption || '[Mídia enviada pelo usuário]' }}
+{{ $('Webhook1').item.json.body.payload.body || $('Webhook1').item.json.body.payload.caption || '[Mídia enviada pelo usuário]' }}# IA-atendimento
