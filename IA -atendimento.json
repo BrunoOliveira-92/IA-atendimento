@@ -1,0 +1,255 @@
+{
+  "name": "IA -atendimento",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "89550ecb-a1db-4eff-9bf2-a90489a430ac",
+              "leftValue": "={{ $json.body.payload.body }}",
+              "rightValue": "#loja",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bd0ecb23-8ec6-481e-8872-2b72e7efe46c",
+              "leftValue": "={{ $json.body.payload.fromMe }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "e8a99761-f4cc-45f9-8e84-dafdaf427dd9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook1').item.json.body.payload.body }}",
+        "options": {
+          "systemMessage": "Você é o assistente virtual oficial da TechStore, uma loja especializada em produtos de tecnologia.\nSeu atendimento deve ser estritamente formal, cordial, claro e objetivo.\n\nREGRAS DE ATENDIMENTO:\n1. Sempre que o cliente perguntar sobre disponibilidade, preço ou quantidade de um produto, utilize OBRIGATORIAMENTE a ferramenta \"Consultar_Estoque\" antes de responder. Nunca invente preços ou quantidades.\n2. Caso o produto esteja disponível (quantidade maior que 0), responda exatamente neste formato estruturado para WhatsApp:\n\nPrezado(a) cliente, agradeço pelo seu contato. Seguem as informações solicitadas referentes ao produto:\n\n*Produto:* [Nome completo do produto]\n*Especificações:* [Especificações]\n*Valor Unitário:* R$ [Preço]\n*Disponibilidade:* Em estoque ([Quantidade] unidades disponíveis)\n\nCaso deseje prosseguir com a reserva ou tenha alguma dúvida adicional, estou à inteira disposição.\n\n3. Caso o produto tenha quantidade igual a 0, informe cordialmente que o item encontra-se temporariamente indisponível em nosso estoque e coloque-se à disposição para verificar modelos similares.\n4. Caso o produto não conste na base de dados, peça desculpas formalmente e solicite que o cliente confirme o modelo ou fabricante desejado."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "e765a2a2-35f0-4bc4-9eb4-5618a4632931",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        128
+      ],
+      "id": "ee827282-4580-4dff-9035-f1b00ff4368d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "fhWSNJpI6kOE2s94",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use esta ferramenta para consultar todos os produtos, preços, especificações e quantidades disponíveis no estoque da loja.",
+        "url": "https://docs.google.com/spreadsheets/d/1hpBd17lnJtdKVx8I4BksbdsdTZvjItt25DdcqSfc-cA/export?format=csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        112
+      ],
+      "id": "1469506e-3245-4e91-a823-152df50b554b",
+      "name": "Consultar_Estoque"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook1').item.json.body.payload.from }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        512,
+        224
+      ],
+      "id": "d7a0845a-970e-4eff-8b02-0ca45aa1575f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "4a57d2d1-ded7-4fbe-a399-32539e6d317f",
+      "name": "Webhook1",
+      "webhookId": "b704e768-5f48-4b0e-8999-6484cb6c41a8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "123456"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session",
+              "value": "default"
+            },
+            {
+              "name": "chatId",
+              "value": "={{ $('Webhook1').item.json.body.payload.from }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "d5c1c8b8-d164-42c7-beb9-0c428030827a",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar_Estoque": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9955382c-5d3f-4efc-82af-0f5a53b535da",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6ca43d007373542c361d3168e906baf225a45f41d0dad0a613be2f9f2dcb0644"
+  },
+  "nodeGroups": [],
+  "id": "jcluhQ73z9tEkCw1",
+  "tags": []
+}
